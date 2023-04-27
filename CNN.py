@@ -114,15 +114,15 @@ MOMENTUM = 0.9
 
 # Define the loss function, optimizer, and learning rate scheduler
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(mlp.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
+optimizer = optim.SGD(cnn.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 lr_decay = optim.lr_scheduler.StepLR(optimizer,10,0.1)
 
 # Train the MLP for 5 epochs
-for epoch in range(5):
+for epoch in range(15):
     train_loss = train(cnn, train_loader, criterion, optimizer, device)
     test_acc = test(cnn, test_loader, device)
+    lr_decay.step()
     print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
-# Test on a batch of data
 
 with torch.no_grad():  # Don't accumlate gradients
   cnn.eval()  # We are in evalutation mode (i.e No dropout)
