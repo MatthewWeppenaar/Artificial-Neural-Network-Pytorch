@@ -111,13 +111,13 @@ MOMENTUM = 0.9
 # Define the loss function, optimizer, and learning rate scheduler
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(mlp.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
-#lr_decay = optim.lr_scheduler.StepLR(optimizer,10,0.1)
+lr_decay = optim.lr_scheduler.StepLR(optimizer,10,0.1)
 
 # Train the MLP for 5 epochs
 for epoch in range(15):
     train_loss = train(mlp, train_loader, criterion, optimizer, device)
     test_acc = test(mlp, test_loader, device)
-    #lr_decay.step()
+    lr_decay.step()
     print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
 
 # Test on a batch of data
