@@ -77,9 +77,12 @@ class CNN(nn.Module):
         super(CNN, self).__init__()
         super().__init__()
         self.conv1 = nn.Conv2d(3, 6, kernel_size=5)
+        self.conv1_bn = nn.BatchNorm2d(6)
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(6, 16, kernel_size=5)
+        self.conv2_bn = nn.BatchNorm2d(16)
         self.conv3 = nn.Conv2d(16,120,kernel_size=5)
+
         self.flatten = nn.Flatten()
         self.fc2 = nn.Linear(120, 84)
         self.fc1_bn = nn.BatchNorm1d(120)
@@ -92,8 +95,8 @@ class CNN(nn.Module):
         self.output = nn.LogSoftmax(dim=1)
 
     def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
+        x = self.pool(F.relu(self.conv1_bn(self.conv1(x))))
+        x = self.pool(F.relu(self.conv2_bn(self.conv2(x))))
         x = F.relu(self.conv3(x))
         x = self.flatten(x) # flatten all dimensions except batch
         x = self.fc1_bn(x)
