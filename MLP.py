@@ -10,21 +10,27 @@ transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
 ])
 
 
-# Load MNIST dataset
-# Train
-trainset = torchvision.datasets.MNIST(root='./data', train=True,
+trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                       download=True, transform=transform)
+print(trainset)
 # Test
-testset = torchvision.datasets.MNIST(root='./data', train=False,
+testset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                       download=True, transform=transform)
 
 # Send data to the data loaders
-BATCH_SIZE = 128
+BATCH_SIZE = 64
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE,
                                           shuffle=True)
 
 test_loader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE,
                                           shuffle=False)
+
+#import matplotlib.pyplot as plt
+
+examples = enumerate(test_loader)
+batch_idx, (example_data, example_targets) = next(examples)
+
+print(example_data.shape)
 
 import torch.nn as nn  # Layers
 import torch.nn.functional as F # Activation Functions
