@@ -4,10 +4,11 @@ import torchvision.transforms as transforms  # Subpackage that contains image tr
 
 # Create the transform sequence
 transform = transforms.Compose([
-    transforms.ToTensor(),  # Convert to Tensor
+transforms.ToTensor(),  # Convert to Tensor
     # Normalize Image to [-1, 1] first number is mean, second is std deviation
-    transforms.Normalize((0.5,), (0.5,)) 
+transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
 ])
+
 
 # Load MNIST dataset
 # Train
