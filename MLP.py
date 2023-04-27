@@ -40,17 +40,27 @@ class MLP(nn.Module):
     def __init__(self):
         super(MLP, self).__init__()
         self.flatten = nn.Flatten() # For flattening the 2D image
-        self.fc1 = nn.Linear(28*28, 512)  # Input is image with shape (28x28)
-        self.fc2 = nn.Linear(512, 256)  # First HL
-        self.fc3= nn.Linear(256, 10) # Second HL
+        self.fc1 = nn.Linear(3*32*32, 2048)  # Input is image with shape (28x28)
+        self.fc1_bn = nn.BatchNorm1d(2048)
+        self.fc2 = nn.Linear(2048, 512)  # First HL
+        self.fc2_bn = nn.BatchNorm1d(512)
+        self.fc3 = nn.Linear(512, 10)  # First HL
+        self.dropout1=nn.Dropout(0.1)
         self.output = nn.LogSoftmax(dim=1)
 
     def forward(self, x):
       # Batch x of shape (B, C, W, H)
       x = self.flatten(x) # Batch now has shape (B, C*W*H)
-      x = F.relu(self.fc1(x))  # First Hidden Layer
-      x = F.relu(self.fc2(x))  # Second Hidden Layer
-      x = self.fc3(x)  # Output Layer
+      #x = self.dropout1(x)
+      x = F.relu(self.fc1_bn(self.fc1(x)))
+      x = self.dropout1(x)
+      #x = F.relu(self.fc1_bn(x))  # First Hidden Layer
+
+      x = F.relu(self.fc2_bn(self.fc2(x)))
+    #  x = self.dropout1(x)
+      #x = F.relu(self.fc2_bn(x))  # Second Hidden Layer
+      x = self.dropout1(x)
+      x = F.relu(self.fc3(x))
       x = self.output(x)  # For multi-class classification
       return x  # Has shape (B, 10)
 # Identify device
