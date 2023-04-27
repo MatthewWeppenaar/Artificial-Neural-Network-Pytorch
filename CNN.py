@@ -109,12 +109,13 @@ class CNN(nn.Module):
     
 cnn = CNN().to(device)
 
-LEARNING_RATE = 1e-1
+LEARNING_RATE = 1e-3
 MOMENTUM = 0.9
 
 # Define the loss function, optimizer, and learning rate scheduler
-criterion = nn.CrossEntropyLoss() # Use this if not using softmax layer
-optimizer = optim.SGD(cnn.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.SGD(mlp.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
+lr_decay = optim.lr_scheduler.StepLR(optimizer,10,0.1)
 
 # Train the MLP for 5 epochs
 for epoch in range(5):
