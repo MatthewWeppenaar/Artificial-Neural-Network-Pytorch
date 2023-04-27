@@ -71,8 +71,6 @@ device = ("cuda" if torch.cuda.is_available()
 print(f"Using {device} device")
 
 # Creat the model and send its parameters to the appropriate device
-mlp = MLP().to(device)
-
 import torch.optim as optim # Optimizers
 
 # Define the training and testing functions
@@ -102,19 +100,24 @@ def test(net, test_loader, device):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()  # How many are correct?
     return correct / total
+
 mlp = MLP().to(device)
 
-LEARNING_RATE = 1e-4
+LEARNING_RATE = 1e-3
+#add learning rate decay
+
 MOMENTUM = 0.9
 
 # Define the loss function, optimizer, and learning rate scheduler
-criterion = nn.NLLLoss()
+criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(mlp.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
+#lr_decay = optim.lr_scheduler.StepLR(optimizer,10,0.1)
 
 # Train the MLP for 5 epochs
-for epoch in range(5):
+for epoch in range(15):
     train_loss = train(mlp, train_loader, criterion, optimizer, device)
     test_acc = test(mlp, test_loader, device)
+    #lr_decay.step()
     print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
 
 # Test on a batch of data
