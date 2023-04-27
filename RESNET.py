@@ -81,10 +81,10 @@ class CIFAR10ResNet(nn.Module):
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
         
-        self.resblock1 = ResNetBlock(64, 64, stride=1)
-        self.resblock2 = ResNetBlock(64, 128, stride=2)
-        self.resblock3 = ResNetBlock(128, 256, stride=2)
-        self.resblock4 = ResNetBlock(256, 512, stride=2)
+       # self.resblock1 = ResNetBlock(64, 64, stride=1)
+        #self.resblock2 = ResNetBlock(64, 128, stride=2)
+        #self.resblock3 = ResNetBlock(128, 256, stride=2)
+        self.resblock4 = ResNetBlock(64, 512, stride=2)
         
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512, 10)
@@ -94,9 +94,9 @@ class CIFAR10ResNet(nn.Module):
         x = self.bn1(x)
         x = self.relu(x)
         
-        x = self.resblock1(x)
-        x = self.resblock2(x)
-        x = self.resblock3(x)
+        #x = self.resblock1(x)
+        #x = self.resblock2(x)
+        # = self.resblock3(x)
         x = self.resblock4(x)
         
         x = self.avgpool(x)
@@ -154,29 +154,43 @@ def test(net, test_loader, device):
             correct += (predicted == labels).sum().item()  # How many are correct?
     return correct / total
 
-mlp = CIFAR10ResNet().to(device)
+res = CIFAR10ResNet().to(device)
 
 LEARNING_RATE = 1e-3
 MOMENTUM = 0.9
 
 # Define the loss function, optimizer, and learning rate scheduler
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(mlp.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
+optimizer = optim.SGD(res.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 lr_decay = optim.lr_scheduler.StepLR(optimizer,10,0.1)
 
-# Train the MLP for 5 epochs
-for epoch in range(15):
-    train_loss = train(mlp, train_loader, criterion, optimizer, device)
-    test_acc = test(mlp, test_loader, device)
-    lr_decay.step()
-    print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
+import sys
+import os
 
-# Test on a batch of data
-with torch.no_grad():  # Don't accumlate gradients
-  mlp.eval()  # We are in evalutation mode
-  x = example_data.to(device)
-  outputs = mlp(x)  # Alias for mlp.forward
+if sys.argv[1] == "-save":
+    test_mlp = []
+    test_scores = []    
+    for epoch in range(15):
+        train_loss = train(res, train_loader, criterion, optimizer, device)
+        test_acc = test(res, test_loader, device)
+        lr_decay.step()
+        print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
+        test_mlp.append(res.state_dict())
+        test_scores.append(test_acc)
+    
+    if os.path.exists("best_RES.pth"):
+        os.remove("best_RES.pth")
 
-  # Print example output.
-  print(torch.exp(outputs[0]))
-  print(f'Prediction: {torch.max(outputs, 1)[1][0]}')
+    print("We saving a model")
+    
+    max_index = test_scores.index(max(test_scores))
+    torch.save(test_mlp[max_index], "best_RES.pth")
+if sys.argv[1] == '-load':
+    res = CIFAR10ResNet()
+    print("loading params...")
+    res.load_state_dict(torch.load("best_RES.pth"))
+    print("Done !")
+
+    # Test the loaded model and print the accuracy
+    test_acc = test(res, test_loader, device)*100
+    print(f"Test accuracy = {test_acc:.2f}%")
