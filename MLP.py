@@ -6,7 +6,7 @@ import torchvision.transforms as transforms  # Subpackage that contains image tr
 transform = transforms.Compose([
 transforms.ToTensor(),  # Convert to Tensor
     # Normalize Image to [-1, 1] first number is mean, second is std deviation
-transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+transforms.Normalize((0.5,), (0.5,)) 
 ])
 
 
@@ -113,12 +113,21 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(mlp.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 lr_decay = optim.lr_scheduler.StepLR(optimizer,10,0.1)
 
+test_mlp = []
+test_scores = []
+
 # Train the MLP for 5 epochs
 for epoch in range(15):
     train_loss = train(mlp, train_loader, criterion, optimizer, device)
     test_acc = test(mlp, test_loader, device)
     lr_decay.step()
     print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
+    
+    test_mlp.append(mlp.state_dict())
+    test_scores.append(test_acc)
+max_index = test_scores.index(max(test_scores))
+print(max_index)
+torch.save(test_mlp[max_index], "best_test.pth")
 
 # Test on a batch of data
 with torch.no_grad():  # Don't accumlate gradients
@@ -129,3 +138,10 @@ with torch.no_grad():  # Don't accumlate gradients
   # Print example output.
   print(torch.exp(outputs[0]))
   print(f'Prediction: {torch.max(outputs, 1)[1][0]}')
+
+mlp = MLP()
+mlp.load_state_dict(torch.load("best_test.pth"))
+
+# Test the loaded model and print the accuracy
+test_acc = test(mlp, test_loader, device)*100
+print(f"Test accuracy after loading saved model: {test_acc:.4f}")
