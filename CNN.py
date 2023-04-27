@@ -75,20 +75,34 @@ import torch.nn.functional as F # Activation Functions
 class CNN(nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
-        self.conv1 = nn.Conv2d(1, 5, 3, padding=1) # First Conv Layer
-        self.pool = nn.MaxPool2d(2)  # For pooling
-        self.flatten = nn.Flatten() # For flattening the 2D image
-        self.fc1 = nn.Linear(980, 256)  # First FC HL
-        self.fc2= nn.Linear(256, 10) # Output layer
+        super().__init__()
+        self.conv1 = nn.Conv2d(3, 6, kernel_size=5)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=5)
+        self.conv3 = nn.Conv2d(16,120,kernel_size=5)
+        self.flatten = nn.Flatten()
+        self.fc2 = nn.Linear(120, 84)
+        self.fc1_bn = nn.BatchNorm1d(120)
+        self.fc3 = nn.Linear(84, 10)
+        #
+        self.fc2_bn = nn.BatchNorm1d(84)
+        #self.dropout1 = nn.Dropout(0.5)
+        #self.fc5= nn.Linear(256, 10) # Second HL
+        
+        self.output = nn.LogSoftmax(dim=1)
 
     def forward(self, x):
-      # Batch x of shape (B, C, W, H)
-      x = F.relu(self.conv1(x)) # Shape: (B, 5, 28, 28)
-      x = self.pool(x)  # Shape: (B, 5, 14, 14)
-      x = self.flatten(x) # Shape: (B, 980)
-      x = F.relu(self.fc1(x))  # Shape (B, 256)
-      x = self.fc2(x)  # Shape: (B, 10)
-      return x  
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = F.relu(self.conv3(x))
+        x = self.flatten(x) # flatten all dimensions except batch
+        x = self.fc1_bn(x)
+       # x = self.dropout1(x)
+        #x = self.fc1(x)
+        x = F.relu(self.fc2_bn(self.fc2(x)))
+       # x = self.dropout1(x)
+        x = self.fc3(x)
+        return x
     
 cnn = CNN().to(device)
 
