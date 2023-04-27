@@ -13,7 +13,6 @@ transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
 # Train
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                       download=True, transform=transform)
-print(trainset)
 # Test
 testset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                       download=True, transform=transform)
@@ -31,7 +30,7 @@ test_loader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE,
 examples = enumerate(test_loader)
 batch_idx, (example_data, example_targets) = next(examples)
 
-print(example_data.shape)
+
 # Identify device
 device = ("cuda" if torch.cuda.is_available()
     else "mps" if torch.backends.mps.is_available()
@@ -117,18 +116,32 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(cnn.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 lr_decay = optim.lr_scheduler.StepLR(optimizer,10,0.1)
 
-# Train the MLP for 5 epochs
-for epoch in range(15):
-    train_loss = train(cnn, train_loader, criterion, optimizer, device)
-    test_acc = test(cnn, test_loader, device)
-    lr_decay.step()
-    print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
+import sys
+import os
 
-with torch.no_grad():  # Don't accumlate gradients
-  cnn.eval()  # We are in evalutation mode (i.e No dropout)
-  x = [data for data in test_loader][0][0].to(device)
-  outputs = cnn(x)  # Alias for cnn.forward
+if sys.argv[1] == "-save":
+    test_mlp = []
+    test_scores = []    
+    for epoch in range(15):
+        train_loss = train(cnn, train_loader, criterion, optimizer, device)
+        test_acc = test(cnn, test_loader, device)
+        lr_decay.step()
+        print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
+    
+    if os.path.exists("best_CNN.pth"):
+        os.remove("best_CNN.pth")
 
-  # Print example output.
-  print(outputs[0])
-  print(f'Prediction: {torch.max(outputs, 1)[1][0]}')
+    print("We saving a model")
+    test_mlp.append(cnn.state_dict())
+    test_scores.append(test_acc)
+    max_index = test_scores.index(max(test_scores))
+    torch.save(test_mlp[max_index], "best_CNN.pth")
+if sys.argv[1] == '-load':
+    cnn = CNN()
+    print("loading params...")
+    cnn.load_state_dict(torch.load("best_CNN.pth"))
+    print("Done !")
+
+    # Test the loaded model and print the accuracy
+    test_acc = test(cnn, test_loader, device)*100
+    print(f"Test accuracy = {test_acc:.2f}%")
