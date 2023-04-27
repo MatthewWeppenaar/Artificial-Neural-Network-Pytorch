@@ -6,31 +6,32 @@ import torchvision.transforms as transforms  # Subpackage that contains image tr
 transform = transforms.Compose([
     transforms.ToTensor(),  # Convert to Tensor
     # Normalize Image to [-1, 1] first number is mean, second is std deviation
-    transforms.Normalize((0.5,), (0.5,)) 
+transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
 ])
 
 # Load MNIST dataset
 # Train
-trainset = torchvision.datasets.MNIST(root='./data', train=True,
-                                      download=True, transform=transform)
-# Test
-testset = torchvision.datasets.MNIST(root='./data', train=False,
+trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                       download=True, transform=transform)
 print(trainset)
+# Test
+testset = torchvision.datasets.CIFAR10(root='./data', train=False,
+                                      download=True, transform=transform)
 
 # Send data to the data loaders
-BATCH_SIZE = 128
+BATCH_SIZE = 64
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE,
                                           shuffle=True)
 
 test_loader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE,
                                           shuffle=False)
 
+#import matplotlib.pyplot as plt
+
 examples = enumerate(test_loader)
 batch_idx, (example_data, example_targets) = next(examples)
 
 print(example_data.shape)
-
 # Identify device
 device = ("cuda" if torch.cuda.is_available()
     else "mps" if torch.backends.mps.is_available()
