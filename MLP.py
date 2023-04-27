@@ -12,7 +12,7 @@ transforms.Normalize((0.5,), (0.5,))
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                       download=True, transform=transform)
-print(trainset)
+
 # Test
 testset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                       download=True, transform=transform)
@@ -30,7 +30,6 @@ test_loader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE,
 examples = enumerate(test_loader)
 batch_idx, (example_data, example_targets) = next(examples)
 
-print(example_data.shape)
 
 import torch.nn as nn  # Layers
 import torch.nn.functional as F # Activation Functions
@@ -113,35 +112,71 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(mlp.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 lr_decay = optim.lr_scheduler.StepLR(optimizer,10,0.1)
 
-test_mlp = []
-test_scores = []
 
-# Train the MLP for 5 epochs
-for epoch in range(15):
-    train_loss = train(mlp, train_loader, criterion, optimizer, device)
-    test_acc = test(mlp, test_loader, device)
-    lr_decay.step()
-    print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
+import sys
+import os
+
+if sys.argv[1] == "-save":
+    test_mlp = []
+    test_scores = []    
+    for epoch in range(15):
+        train_loss = train(mlp, train_loader, criterion, optimizer, device)
+        test_acc = test(mlp, test_loader, device)
+        lr_decay.step()
+        print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
     
+    if os.path.exists("best_MLP.pth"):
+        os.remove("best_MLP..pth")
+
+    print("We saving a model")
     test_mlp.append(mlp.state_dict())
     test_scores.append(test_acc)
-max_index = test_scores.index(max(test_scores))
-print(max_index)
-torch.save(test_mlp[max_index], "best_test.pth")
+    max_index = test_scores.index(max(test_scores))
+    torch.save(test_mlp[max_index], "best_MLP.pth")
+if sys.argv[1] == '-load':
+    mlp = MLP()
+    print("loading params...")
+    mlp.load_state_dict(torch.load("best_MLP.pth"))
+    print("Done !")
 
-# Test on a batch of data
-with torch.no_grad():  # Don't accumlate gradients
-  mlp.eval()  # We are in evalutation mode
-  x = example_data.to(device)
-  outputs = mlp(x)  # Alias for mlp.forward
+    # Test the loaded model and print the accuracy
+    test_acc = test(mlp, test_loader, device)*100
+    print(f"Test accuracy = {test_acc:.2f}%")
+
+# Train the MLP for 5 epochs
+#for epoch in range(15):
+   # train_loss = train(mlp, train_loader, criterion, optimizer, device)
+    #test_acc = test(mlp, test_loader, device)
+    #lr_decay.step()
+    #print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
+    
+    #test_mlp.append(mlp.state_dict())
+    #test_scores.append(test_acc)
+#max_index = test_scores.index(max(test_scores))
+#print(max_index)
+
+
+
+#if len(sys.argv) == 0:
+   # print("No save or load flags passed")
+
+#elif sys.argv[1] == "-save":
+   # print("We saving a model")
+    #torch.save(test_mlp[max_index], "best_test.pth")
+
+    # Test on a batch of data
+    #with torch.no_grad():  # Don't accumlate gradients
+    #mlp.eval()  # We are in evalutation mode
+    #x = example_data.to(device)
+    #outputs = mlp(x)  # Alias for mlp.forward
 
   # Print example output.
-  print(torch.exp(outputs[0]))
-  print(f'Prediction: {torch.max(outputs, 1)[1][0]}')
+  #print(torch.exp(outputs[0]))
+  #print(f'Prediction: {torch.max(outputs, 1)[1][0]}')
+#elif len(sys.argv) == 1 and sys.argv[1] == '-load':
+ #   mlp = MLP()
+  #  mlp.load_state_dict(torch.load("best_test.pth"))
 
-mlp = MLP()
-mlp.load_state_dict(torch.load("best_test.pth"))
-
-# Test the loaded model and print the accuracy
-test_acc = test(mlp, test_loader, device)*100
-print(f"Test accuracy after loading saved model: {test_acc:.4f}")
+    # Test the loaded model and print the accuracy
+   # test_acc = test(mlp, test_loader, device)*100
+    #print(f"Test accuracy after loading saved model: {test_acc:.2f}")
