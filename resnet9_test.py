@@ -36,22 +36,31 @@ print(example_data.shape)
 import torch
 import torch.nn as nn
 
-'''
+import torch.nn as nn  # Layers
+import torch.nn.functional as F # Activation Functions
 # Define the basic residual block
 class SimpleResidualBlock(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=3, kernel_size=3, stride=1, padding=1)
-        self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(in_channels=3, out_channels=3, kernel_size=3, stride=1, padding=1)
-        self.relu2 = nn.ReLU()
+        self.conv1 = nn.Sequential(
+                        nn.Conv2d(128,128, kernel_size = 3, stride = 1, padding = 1),
+                        nn.BatchNorm2d(128),
+                        nn.ReLU())
+        self.conv2 = nn.Sequential(
+                        nn.Conv2d(128, 128, kernel_size = 3, stride = 1, padding = 1),
+                        nn.BatchNorm2d(128))
+        
+        self.relu = nn.ReLU()
+        
         
     def forward(self, x):
+        residual = x
         out = self.conv1(x)
-        out = self.relu1(out)
         out = self.conv2(out)
-        return self.relu2(out) + x
-'''
+        out += residual
+        out = self.relu(out)
+        return out
+
 # Define the ResNet-20 model
 def conv_block(in_channels, out_channels, pool=False):
     layers = [nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1), 
@@ -63,14 +72,25 @@ def conv_block(in_channels, out_channels, pool=False):
 class ResNet9(nn.Module):
     def __init__(self, in_channels, num_classes):
         super().__init__()
+        self.conv1 = nn.Conv2d(in_channels,64, kernel_size=3, padding=1)
+        self.conv1_bn = nn.BatchNorm2d(64)
+        self.pool = nn.MaxPool2d(2)
+
+        self.conv2 = nn.Conv2d(64, 128, kernel_size=3,padding=1)
+        self.conv2_bn = nn.BatchNorm2d(128)
+
+
+
+
+        self.res1 = SimpleResidualBlock()
+
+
+
         
-        self.conv1 = conv_block(in_channels, 64)
-        self.conv2 = conv_block(64, 128, pool=True)
-        self.res1 = nn.Sequential(conv_block(128, 128), conv_block(128, 128))
+        #self.conv1 = conv_block(in_channels, 64)
+        #self.conv2 = conv_block(64, 128, pool=True)
+        #self.res1 = nn.Sequential(conv_block(128, 128), conv_block(128, 128))
         
-        #self.conv3 = conv_block(128, 256, pool=True)
-        #self.conv4 = conv_block(256, 512, pool=True)
-        #self.res2 = nn.Sequential(conv_block(512, 512), conv_block(512, 512))
         
         self.classifier = nn.Sequential(nn.MaxPool2d(4), 
                                         nn.Flatten(), 
@@ -80,10 +100,8 @@ class ResNet9(nn.Module):
     def forward(self, xb):
         out = self.conv1(xb)
         out = self.conv2(out)
-        out = self.res1(out) + out
-        #out = self.conv3(out)
-        #out = self.conv4(out)
-        #out = self.res2(out) + out
+        out = self.pool(F.relu(out))
+        out = self.res1(out)
         out = self.classifier(out)
         return out
 
@@ -92,15 +110,9 @@ device = ("cuda" if torch.cuda.is_available()
     else "cpu"
 )
 
-if not torch.backends.mps.is_available():
-    if not torch.backends.mps.is_built():
-        print("MPS not available because the current PyTorch install was not "
-              "built with MPS enabled.")
-    else:
-        print("MPS not available because the current MacOS version is not 12.3+ "
-              "and/or you do not have an MPS-enabled device on this machine.")
+
 print(f"Using {device} device")
-#simple_resnet =SimpleResidualBlock().to(device)
+
 
 import torch.optim as optim # Optimizers
 
