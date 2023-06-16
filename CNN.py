@@ -78,7 +78,8 @@ class CNN(nn.Module):
         self.conv1 = nn.Conv2d(3, 6, kernel_size=5)
         self.conv1_bn = nn.BatchNorm2d(6)
         self.pool = nn.MaxPool2d(2, 2)
-        
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=5)
+        self.conv2_bn = nn.BatchNorm2d(16)
         self.conv3 = nn.Conv2d(16,120,kernel_size=5)
 
         self.flatten = nn.Flatten()
