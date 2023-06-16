@@ -78,8 +78,7 @@ class CNN(nn.Module):
         self.conv1 = nn.Conv2d(3, 6, kernel_size=5)
         self.conv1_bn = nn.BatchNorm2d(6)
         self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(6, 16, kernel_size=5)
-        self.conv2_bn = nn.BatchNorm2d(16)
+        
         self.conv3 = nn.Conv2d(16,120,kernel_size=5)
 
         self.flatten = nn.Flatten()
@@ -88,21 +87,16 @@ class CNN(nn.Module):
         self.fc3 = nn.Linear(84, 10)
         #
         self.fc2_bn = nn.BatchNorm1d(84)
-        #self.dropout1 = nn.Dropout(0.5)
-        #self.fc5= nn.Linear(256, 10) # Second HL
-        
+     
         self.output = nn.LogSoftmax(dim=1)
 
     def forward(self, x):
-        x = self.pool(F.relu(self.conv1_bn(self.conv1(x))))
-        x = self.pool(F.relu(self.conv2_bn(self.conv2(x))))
-        x = F.relu(self.conv3(x))
+        x = self.pool(F.relu(self.conv1_bn(self.conv1(x)))) #14*14*6
+        x = self.pool(F.relu(self.conv2_bn(self.conv2(x)))) #16*5*5
+        x = F.relu(self.conv3(x)) #1*1*120
         x = self.flatten(x) # flatten all dimensions except batch
         x = self.fc1_bn(x)
-       # x = self.dropout1(x)
-        #x = self.fc1(x)
         x = F.relu(self.fc2_bn(self.fc2(x)))
-       # x = self.dropout1(x)
         x = self.fc3(x)
         return x
     
@@ -114,12 +108,12 @@ MOMENTUM = 0.9
 # Define the loss function, optimizer, and learning rate scheduler
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(cnn.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
-lr_decay = optim.lr_scheduler.StepLR(optimizer,10,0.1)
+lr_decay = optim.lr_scheduler.StepLR(optimizer,10,0.1) #learning rate decay
 
-import sys
+import sys 
 import os
 
-if sys.argv[1] == "-save":
+if sys.argv[1] == "-save": #command line flag for save
     test_mlp = []
     test_scores = []    
     for epoch in range(15):
@@ -127,17 +121,16 @@ if sys.argv[1] == "-save":
         test_acc = test(cnn, test_loader, device)
         lr_decay.step()
         print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
+        test_mlp.append(cnn.state_dict())
+        test_scores.append(test_acc)
     
-    if os.path.exists("best_CNN.pth"):
-        os.remove("best_CNN.pth")
 
     print("We saving a model")
-    test_mlp.append(cnn.state_dict())
-    test_scores.append(test_acc)
+    
     max_index = test_scores.index(max(test_scores))
     torch.save(test_mlp[max_index], "best_CNN.pth")
-if sys.argv[1] == '-load':
-    cnn = CNN()
+if sys.argv[1] == '-load': #command line flag for load
+    cnn = CNN().to(device)
     print("loading params...")
     cnn.load_state_dict(torch.load("best_CNN.pth"))
     print("Done !")
