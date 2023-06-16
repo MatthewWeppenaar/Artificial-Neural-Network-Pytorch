@@ -81,7 +81,7 @@ class ResNet9(nn.Module):
 
 
 
-
+        #creating a simple residual block
         self.res1 = SimpleResidualBlock()
 
 
@@ -90,19 +90,28 @@ class ResNet9(nn.Module):
         #self.conv1 = conv_block(in_channels, 64)
         #self.conv2 = conv_block(64, 128, pool=True)
         #self.res1 = nn.Sequential(conv_block(128, 128), conv_block(128, 128))
+
+        self.pool2 = nn.MaxPool2d(4)
+        self.fc1 = nn.Linear(2048,512)
+        self.fc2 = nn.Linear(512,num_classes)
+        self.flatten = nn.Flatten()
         
         
-        self.classifier = nn.Sequential(nn.MaxPool2d(4), 
-                                        nn.Flatten(), 
-                                        nn.Linear(2048,512),
-                                        nn.Linear(512, num_classes))
+        #self.classifier = nn.Sequential(nn.MaxPool2d(4), 
+         #                               nn.Flatten(), 
+           #                             nn.Linear(2048,512),
+            #                            nn.Linear(512, num_classes))
         
     def forward(self, xb):
         out = self.conv1(xb)
         out = self.conv2(out)
         out = self.pool(F.relu(out))
         out = self.res1(out)
-        out = self.classifier(out)
+        out = self.pool2(out)
+        out = self.flatten(out)
+        out = self.fc1(out)
+        out = self.fc2(out)
+        #out = self.classifier(out)
         return out
 
 device = ("cuda" if torch.cuda.is_available()
