@@ -8,16 +8,20 @@ clean:
 	rm -rf venv
 	find -iname "*.pyc" -delete
 
-run:
+mlp:
 	python3 MLP.py -save
+
+mlp_load: 
 	python3 MLP.py -load
 
-run2:
+cnn:
 	python3 CNN.py -save
+
+cnn_load:
 	python3 CNN.py -load
 
-run3:
+resnet:
 	python3 RESNET.py -save
 
-run4:
+resnet_load:
 	python3 RESNET.py -load
