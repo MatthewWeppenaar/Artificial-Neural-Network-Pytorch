@@ -1,0 +1,6 @@
+venv
+*.pth
+data
+.DS_Store
+.vscode/
+requirements.txt 
