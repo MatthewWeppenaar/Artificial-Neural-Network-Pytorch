@@ -124,17 +124,15 @@ if sys.argv[1] == "-save":
         test_acc = test(mlp, test_loader, device)
         lr_decay.step()
         print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
+        test_mlp.append(mlp.state_dict())
+        test_scores.append(test_acc)
     
-    if os.path.exists("best_MLP.pth"):
-        os.remove("best_MLP..pth")
-
     print("We saving a model")
-    test_mlp.append(mlp.state_dict())
-    test_scores.append(test_acc)
+    
     max_index = test_scores.index(max(test_scores))
     torch.save(test_mlp[max_index], "best_MLP.pth")
 if sys.argv[1] == '-load':
-    mlp = MLP()
+    mlp = MLP().to(device)
     print("loading params...")
     mlp.load_state_dict(torch.load("best_MLP.pth"))
     print("Done !")
@@ -142,41 +140,3 @@ if sys.argv[1] == '-load':
     # Test the loaded model and print the accuracy
     test_acc = test(mlp, test_loader, device)*100
     print(f"Test accuracy = {test_acc:.2f}%")
-
-# Train the MLP for 5 epochs
-#for epoch in range(15):
-   # train_loss = train(mlp, train_loader, criterion, optimizer, device)
-    #test_acc = test(mlp, test_loader, device)
-    #lr_decay.step()
-    #print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
-    
-    #test_mlp.append(mlp.state_dict())
-    #test_scores.append(test_acc)
-#max_index = test_scores.index(max(test_scores))
-#print(max_index)
-
-
-
-#if len(sys.argv) == 0:
-   # print("No save or load flags passed")
-
-#elif sys.argv[1] == "-save":
-   # print("We saving a model")
-    #torch.save(test_mlp[max_index], "best_test.pth")
-
-    # Test on a batch of data
-    #with torch.no_grad():  # Don't accumlate gradients
-    #mlp.eval()  # We are in evalutation mode
-    #x = example_data.to(device)
-    #outputs = mlp(x)  # Alias for mlp.forward
-
-  # Print example output.
-  #print(torch.exp(outputs[0]))
-  #print(f'Prediction: {torch.max(outputs, 1)[1][0]}')
-#elif len(sys.argv) == 1 and sys.argv[1] == '-load':
- #   mlp = MLP()
-  #  mlp.load_state_dict(torch.load("best_test.pth"))
-
-    # Test the loaded model and print the accuracy
-   # test_acc = test(mlp, test_loader, device)*100
-    #print(f"Test accuracy after loading saved model: {test_acc:.2f}")
