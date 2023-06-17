@@ -13,13 +13,13 @@ transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
 # Train
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                       download=True, transform=transform)
-print(trainset)
+
 # Test
 testset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                       download=True, transform=transform)
 
 # Send data to the data loaders
-BATCH_SIZE = 128
+BATCH_SIZE = 64
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE,
                                           shuffle=True)
 
@@ -41,6 +41,7 @@ import torch.nn.functional as F # Activation Functions
 class SimpleResidualBlock(nn.Module):
     def __init__(self):
         super().__init__()
+        #Residual block has 2 convolutional layers
         self.conv1 = nn.Sequential(
                         nn.Conv2d(128,128, kernel_size = 3, stride = 1, padding = 1),
                         nn.BatchNorm2d(128),
@@ -51,7 +52,7 @@ class SimpleResidualBlock(nn.Module):
         
         self.relu = nn.ReLU()
         
-        
+    #h(x)=f(x)+x    
     def forward(self, x):
         residual = x
         out = self.conv1(x)
@@ -63,13 +64,14 @@ class SimpleResidualBlock(nn.Module):
 class ResNet(nn.Module):
     def __init__(self, in_channels, num_classes):
         super().__init__()
+        #convolutional layers before resblock
         self.conv1 = nn.Conv2d(in_channels,64, kernel_size=3, padding=1)
         self.conv1_bn = nn.BatchNorm2d(64)
         self.pool = nn.MaxPool2d(2)
 
         self.conv2 = nn.Conv2d(64, 128, kernel_size=3,padding=1)
         self.conv2_bn = nn.BatchNorm2d(128)
-
+        
         #creating a simple residual block
         self.res1 = SimpleResidualBlock()
 
